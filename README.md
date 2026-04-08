@@ -1,20 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# GatoMiaX — Backoffice Inteligente
 
-# Run and deploy your AI Studio app
+> Plataforma administrativa para gestão de eventos e recreação infantil.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/3eb8b0c1-8a6c-4d95-adb2-c980d42c64bb
+- **Frontend**: React 19 + Vite + Tailwind CSS v4
+- **Animações**: Motion (framer-motion)
+- **Gráficos**: Recharts
+- **Backend**: Firebase (Firestore + Auth)
+- **Deploy**: Vercel
 
-## Run Locally
+## Setup
 
-**Prerequisites:**  Node.js
+```bash
+# 1. Instalar dependências
+npm install
 
+# 2. Configurar Firebase
+cp .env.example .env.local
+# Preencha com as credenciais do seu projeto Firebase
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+# 3. Rodar em desenvolvimento
+npm run dev
+```
+
+## Estrutura
+
+```
+src/
+├── components/       # Componentes reutilizáveis
+│   ├── layout/       # Sidebar, MainLayout
+│   ├── ui/           # Button, Card, Input, Badge
+│   └── shared/       # StatCard, StatusBadge
+├── pages/            # Telas (1 por tab)
+│   ├── Dashboard.tsx
+│   ├── FunilVendas.tsx
+│   ├── NovoEvento.tsx
+│   ├── Servicos.tsx
+│   └── Equipe.tsx
+├── hooks/            # Custom hooks (useEventos, etc.)
+├── lib/              # Firebase config, utils, constants
+├── types/            # TypeScript types
+├── App.tsx           # Router
+└── index.css         # Design System
+```
