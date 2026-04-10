@@ -1,6 +1,6 @@
 // Firebase Configuration
 // Valores reais devem ser preenchidos no .env.local
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
@@ -13,7 +13,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+// Start in mock/prototype mode if no API key is provided
+const isConfigured = !!firebaseConfig.apiKey;
+
+const app = isConfigured && !getApps().length ? initializeApp(firebaseConfig) : ({} as any);
+export const db = isConfigured ? getFirestore(app) : ({} as any);
+export const auth = isConfigured ? getAuth(app) : ({} as any);
 export default app;
