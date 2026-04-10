@@ -56,17 +56,26 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-surface-raised border-r border-surface-border transition-transform duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto",
+          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-surface-raised border-r border-surface-border-subtle transition-transform duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🐾</span>
-            <h1 className="font-display text-lg font-bold text-gradient-brand">
-              GatoMiaX
-            </h1>
+        {/* Logo — roxo + amarelo como no site */}
+        <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border-subtle">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 mascot-badge flex items-center justify-center text-lg">
+              🐱
+            </div>
+            <div>
+              <h1 className="font-display text-base font-bold tracking-tight">
+                <span className="text-brand-yellow">GATO</span>
+                <span className="text-brand-purple-light">MIA</span>
+                <span className="text-text-muted text-xs font-normal ml-1">X</span>
+              </h1>
+              <p className="text-[10px] text-text-muted -mt-0.5 tracking-widest uppercase">
+                Recreação
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setMobileOpen(false)}
@@ -88,16 +97,19 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 setMobileOpen(false);
               }}
               className={cn(
-                "flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer",
+                "flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer group",
                 activeTab === key
-                  ? "bg-brand-yellow text-surface-base glow-yellow font-semibold"
+                  ? "bg-brand-purple text-brand-yellow glow-purple font-semibold"
                   : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
               )}
             >
-              <Icon className="w-4.5 h-4.5 mr-3 flex-shrink-0" />
+              <Icon className={cn(
+                "w-4.5 h-4.5 mr-3 flex-shrink-0 transition-colors",
+                activeTab === key ? "text-brand-yellow" : "text-text-muted group-hover:text-text-secondary"
+              )} />
               {label}
               {key === 'funil' && (
-                <span className="ml-auto text-xs bg-danger/20 text-danger px-1.5 py-0.5 rounded-full font-semibold">
+                <span className="ml-auto text-[10px] bg-brand-yellow text-text-inverse px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">
                   3
                 </span>
               )}
@@ -105,10 +117,10 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-surface-border">
+        {/* Footer — perfil do Victor */}
+        <div className="px-4 py-3 border-t border-surface-border-subtle">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-pink/20 flex items-center justify-center text-xs font-bold text-brand-pink">
+            <div className="w-8 h-8 rounded-full bg-brand-yellow flex items-center justify-center text-xs font-bold text-brand-purple">
               V
             </div>
             <div className="flex-1 min-w-0">
