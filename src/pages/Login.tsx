@@ -61,8 +61,11 @@ export default function Login() {
         setError('A senha deve ter pelo menos 6 caracteres.');
       } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('E-mail ou senha incorretos.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('O login por E-mail/Senha está desativado no Console do Firebase.');
       } else {
-        setError('Ocorreu um erro. Verifique sua conexão.');
+        // Exibe o código técnico para ajudar no debug
+        setError(`Erro: ${err.code || 'Desconhecido'}. Verifique o console da Vercel.`);
       }
     } finally {
       setLoading(false);
