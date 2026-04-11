@@ -143,19 +143,19 @@ export function ServiceModal({ isOpen, onClose, service, onSave, servicosCadastr
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={service ? 'Editar Serviço' : 'Novo Serviço'} className="max-w-2xl">
-      <div className="flex flex-col h-[70vh]">
+    <Modal isOpen={isOpen} onClose={onClose} title={service ? 'Editar Serviço' : 'Novo Serviço'} className="max-w-4xl">
+      <div className="flex flex-col h-[75vh] min-h-[500px]">
         
         {/* TAB HEADERS */}
-        <div className="flex justify-between items-center bg-surface-base border border-surface-border-subtle rounded-xl p-1 mb-6">
+        <div className="flex justify-between items-center bg-surface-base border border-surface-border-subtle rounded-xl p-1 mb-6 overflow-x-auto custom-scrollbar">
           {TABS.map((label, index) => (
             <button
               key={index}
               onClick={() => setActiveTab(index)}
-              className={`flex-1 relative py-2 text-xs font-bold uppercase tracking-widest transition-all rounded-lg flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-[140px] relative py-2.5 px-2 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all rounded-lg flex items-center justify-center gap-2 ${
                 activeTab === index 
-                  ? 'text-brand-yellow bg-surface-raised shadow-md' 
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'text-brand-yellow bg-surface-raised shadow-md border border-brand-yellow/10' 
+                  : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/30'
               }`}
             >
               {hasData(index) && <div className="w-1.5 h-1.5 rounded-full bg-success/80" />}
