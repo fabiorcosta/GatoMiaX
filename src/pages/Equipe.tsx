@@ -231,7 +231,7 @@ export default function Equipe() {
               <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Nível de Experiência</label>
               <select 
                 title="Nível do Recreador"
-                className="w-full h-10 px-4 py-2 bg-surface-base border border-surface-border-subtle rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-purple text-text-primary"
+                className="w-full h-10 pl-4 pr-10 py-2 bg-surface-base border border-surface-border-subtle rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-purple text-text-primary appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M6%209L12%2015L18%209%22%20stroke%3D%22%23F2F2F2%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-size-[1.2em_1.2em] bg-position-[right_0.8rem_center] bg-no-repeat"
                 value={formData.nivel}
                 onChange={e => setFormData({ ...formData, nivel: Number(e.target.value) })}
               >

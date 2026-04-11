@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Filter,
@@ -15,6 +15,9 @@ import { cn } from '@/lib/utils';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { TabKey } from '@/types';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useConfig } from '@/lib/settings';
 
 interface SidebarProps {
   activeTab: TabKey;
@@ -32,6 +35,30 @@ const NAV_ITEMS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] 
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [funilCount, setFunilCount] = useState(0);
+  const { config } = useConfig();
+
+  useEffect(() => {
+    // Escuta apenas eventos que não estão em colunas de conclusão (sucesso ou perda)
+    const terminalIds = config.funnel_stages
+      .filter((col: any) => col.categoria === 'sucesso' || col.categoria === 'perda')
+      .map((col: any) => col.id);
+    
+    if (terminalIds.length === 0) return;
+
+    const q = query(
+      collection(db, 'eventos'),
+      where('statusId', 'not-in', terminalIds)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setFunilCount(snapshot.size);
+    }, (error) => {
+      console.warn("Sidebar Funil Counter Error:", error);
+    });
+
+    return () => unsubscribe();
+  }, [config.funnel_stages]);
 
   const handleSignOut = async () => {
     try {
@@ -121,9 +148,9 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 activeTab === key ? "text-brand-yellow" : "text-text-muted group-hover:text-text-secondary"
               )} />
               {label}
-              {key === 'funil' && (
-                <span className="ml-auto text-[10px] bg-brand-yellow text-text-inverse px-1.5 py-0.5 rounded-full font-bold min-w-[20px] text-center">
-                  3
+              {key === 'funil' && funilCount > 0 && (
+                <span className="ml-auto text-[10px] bg-brand-yellow text-text-inverse px-2 py-0.5 rounded-full font-black min-w-[20px] text-center shadow-sm">
+                  {funilCount}
                 </span>
               )}
             </button>
