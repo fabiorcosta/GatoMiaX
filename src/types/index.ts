@@ -4,14 +4,8 @@ import { Timestamp } from 'firebase/firestore';
 // Evento (Core Entity)
 // ═══════════════════════════════════════
 
-export type EventoStatus =
-  | 'lead'
-  | 'orcado'
-  | 'aguardando_sinal'
-  | 'confirmado'
-  | 'executado'
-  | 'finalizado'
-  | 'cancelado';
+// Types dinâmicos de funil agora substituem os estados fixos anteriores
+export type EventoStatus = string;
 
 export type TipoEvento = 'festa' | 'colonia';
 
@@ -190,4 +184,5 @@ export type TabKey =
   | 'funil'
   | 'novo-evento'
   | 'servicos'
-  | 'equipe';
+  | 'equipe'
+  | 'settings';

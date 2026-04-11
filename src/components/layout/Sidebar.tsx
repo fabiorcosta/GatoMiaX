@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   LogOut,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const NAV_ITEMS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] 
   { key: 'novo-evento', label: 'Novo Evento', icon: PlusCircle },
   { key: 'servicos', label: 'Serviços', icon: Briefcase },
   { key: 'equipe', label: 'Equipe', icon: Users },
+  { key: 'settings', label: 'Configurações', icon: SettingsIcon },
 ];
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -115,7 +117,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               )}
             >
               <Icon className={cn(
-                "w-4.5 h-4.5 mr-3 flex-shrink-0 transition-colors",
+                "w-4.5 h-4.5 mr-3 shrink-0 transition-colors",
                 activeTab === key ? "text-brand-yellow" : "text-text-muted group-hover:text-text-secondary"
               )} />
               {label}

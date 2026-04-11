@@ -11,6 +11,7 @@ import NovoEvento from '@/pages/NovoEvento';
 import Servicos from '@/pages/Servicos';
 import Equipe from '@/pages/Equipe';
 import Login from '@/pages/Login';
+import Settings from '@/pages/Settings';
 import { Button } from '@/components/ui/Button';
 import { Clock, ShieldAlert, LogOut } from 'lucide-react';
 import type { TabKey, Usuario } from '@/types';
@@ -21,6 +22,7 @@ const PAGES: Record<TabKey, React.ComponentType> = {
   'novo-evento': NovoEvento,
   servicos: Servicos,
   equipe: Equipe,
+  settings: Settings,
 };
 
 export default function App() {
