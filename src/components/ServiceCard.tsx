@@ -70,7 +70,7 @@ export function ServiceCard({ service, mode = "public", onSelect, onEdit, onTogg
         </div>
 
         <p className="text-sm text-text-secondary line-clamp-2 mt-2 mb-4 h-10">
-          {service.descricao || <span className="italic text-text-muted/50">Sem descrição cadastrada.</span>}
+          {service.description || service.descricao || <span className="italic text-text-muted/50">Sem descrição cadastrada.</span>}
         </p>
 
         <div className="mt-auto pt-4 border-t border-surface-border-subtle flex items-center justify-between gap-3">
@@ -117,8 +117,40 @@ export function ServiceCard({ service, mode = "public", onSelect, onEdit, onTogg
         </h3>
         
         <p className="text-text-secondary leading-relaxed mb-6 flex-1">
-          {service.descricao}
+          {service.description || service.descricao}
         </p>
+
+        {(service.durationMinutes || service.maxChildren || service.tags?.length || service.timesExecuted !== undefined) && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {service.durationMinutes && (
+              <span className="text-xs bg-surface-raised px-2 py-1 rounded-md text-text-muted font-semibold">
+                ⏱ {service.durationMinutes} min
+              </span>
+            )}
+            {service.maxChildren && (
+              <span className="text-xs bg-surface-raised px-2 py-1 rounded-md text-text-muted font-semibold">
+                👶 Máx {service.maxChildren} crianças
+              </span>
+            )}
+            {service.timesExecuted !== undefined && service.timesExecuted > 0 && (
+              <span className="text-xs bg-brand-yellow/10 text-brand-yellow px-2 py-1 rounded-md font-semibold">
+                🔥 Executado {service.timesExecuted} vezes
+              </span>
+            )}
+            {service.tags?.slice(0, 3).map(tag => (
+              <span key={tag} className="text-xs bg-surface-border px-2 py-1 rounded-md text-text-secondary">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {service.testimonials && service.testimonials.length > 0 && (
+          <div className="mb-6 p-4 bg-surface-raised/50 rounded-xl border border-surface-border-subtle">
+            <p className="text-sm font-medium text-text-primary italic mb-2">"{service.testimonials[0].text}"</p>
+            <p className="text-xs text-brand-yellow font-bold">— {service.testimonials[0].clientName}</p>
+          </div>
+        )}
         
         <div className="mt-auto">
           <p className="text-xs font-black uppercase text-text-muted mb-1 tracking-widest">Investimento Sugerido</p>

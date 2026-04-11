@@ -14,8 +14,10 @@ export function serviceToWhatsAppText(service: Servico): string {
   
   const linhas = [
     `*${service.nome.toUpperCase()}*`,
-    service.descricao ? `${service.descricao}` : null,
+    service.description || service.descricao ? `${service.description || service.descricao}` : null,
     `💰 Investimento sugerido: *${formatCurrency(service.precoSugerido)}*`,
+    service.durationMinutes ? `⏱ Duração: ${service.durationMinutes} minutos` : null,
+    service.maxChildren ? `👶 Capacidade: Até ${service.maxChildren} crianças` : null,
     `👤 Nível Operacional Exigido: ${nivelLabel[service.nivelMinimo] || "Básico"}`
   ];
 

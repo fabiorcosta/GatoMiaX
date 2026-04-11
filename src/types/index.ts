@@ -125,6 +125,13 @@ export interface Recreador {
 // Serviço
 // ═══════════════════════════════════════
 
+export interface Testimonial {
+  id: string;
+  clientName: string;
+  text: string;
+  date: Timestamp | string;
+}
+
 export interface CustoVariavel {
   item: string;
   valor: number;
@@ -133,17 +140,32 @@ export interface CustoVariavel {
 export interface Servico {
   id: string;
   nome: string;
-  descricao?: string;
+  descricao?: string; // Campo legado, mantido para evitar quebra de contratos
+  description: string; // Novo campo obrigatório
+  imageUrl?: string;
+  gallery?: string[];
+  durationMinutes?: number;
+  maxChildren?: number;
+  tags?: string[];
+  requiresPower?: boolean;
+  setupMinutes?: number;
+  ageMin?: number;
+  ageMax?: number;
+  seasonalMonths?: number[];
+  complementaryServiceIds?: string[];
+  testimonials?: Testimonial[];
+  timesExecuted?: number;
+  avgRating?: number;
+
   precoSugerido: number;
   custosVariaveis?: CustoVariavel[];
   checklist: string[];
   nivelMinimo: 1 | 2 | 3;
   ativo: boolean;
   ativoDesde?: Timestamp | string;
-  tags?: string[];
-  idadeMinima?: number;
-  idadeMaxima?: number;
-  espacoMinimo?: string;
+  idadeMinima?: number; // legacy
+  idadeMaxima?: number; // legacy
+  espacoMinimo?: string; // legacy
   createdAt: Timestamp | string;
   updatedAt: Timestamp | string;
 }
