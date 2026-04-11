@@ -41,8 +41,8 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className={cn(
-              "relative w-[95vw] sm:w-full max-w-lg min-w-[320px] shrink-0 card-gradient border border-surface-border glass rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]",
-              className
+              "relative w-[95vw] sm:w-full min-w-[320px] shrink-0 card-gradient border border-surface-border glass rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]",
+              className || "max-w-lg"
             )}
           >
             {/* Header */}
