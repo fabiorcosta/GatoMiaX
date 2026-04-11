@@ -7,9 +7,12 @@ import {
   Users,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import type { TabKey } from '@/types';
 
 interface SidebarProps {
@@ -27,6 +30,14 @@ const NAV_ITEMS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] 
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   return (
     <>
@@ -67,12 +78,12 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               🐱
             </div>
             <div>
-              <h1 className="font-display text-base font-bold tracking-tight">
+              <h1 className="font-display text-base font-bold tracking-tight leading-none">
                 <span className="text-brand-yellow">GATO</span>
                 <span className="text-brand-purple-light">MIA</span>
                 <span className="text-text-muted text-xs font-normal ml-1">X</span>
               </h1>
-              <p className="text-[10px] text-text-muted -mt-0.5 tracking-widest uppercase">
+              <p className="text-[10px] text-text-muted mt-1 tracking-widest uppercase font-medium">
                 Recreação
               </p>
             </div>
@@ -118,16 +129,23 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         </nav>
 
         {/* Footer — perfil do Victor */}
-        <div className="px-4 py-3 border-t border-surface-border-subtle">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-yellow flex items-center justify-center text-xs font-bold text-brand-purple">
+        <div className="px-4 py-4 border-t border-surface-border-subtle bg-surface-base/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-brand-yellow flex items-center justify-center text-sm font-bold text-brand-purple shadow-lg shadow-brand-yellow/10">
               V
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-primary truncate">Victor</p>
-              <p className="text-xs text-text-muted">Admin</p>
+              <p className="text-sm font-bold text-text-primary truncate">Victor Hugo</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider">Administrador</p>
             </div>
           </div>
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center justify-center gap-2 w-full py-2 px-3 text-xs font-semibold text-danger bg-danger/5 hover:bg-danger/10 border border-danger/20 rounded-xl transition-all active:scale-95"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Encerrar Sessão
+          </button>
         </div>
       </aside>
     </>

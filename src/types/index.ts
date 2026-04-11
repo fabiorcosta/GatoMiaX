@@ -173,6 +173,18 @@ export interface AppConfig {
 // UI Types (não persistidos)
 // ═══════════════════════════════════════
 
+export type UserRole = 'admin' | 'recreador' | 'viewer';
+
+export interface Usuario {
+  id: string; // UID do Firebase Auth
+  nome: string;
+  email: string;
+  role: UserRole;
+  approved: boolean;
+  createdAt: Timestamp | string;
+  lastLogin: Timestamp | string;
+}
+
 export type TabKey =
   | 'dashboard'
   | 'funil'
