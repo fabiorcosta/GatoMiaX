@@ -17,24 +17,24 @@ import {
 export default function Dashboard() {
   // Mock data for Phase 1 - Componentization
   const kpis = {
-    revenue: 4580.00,
-    profit: 2200.00,
-    events: 12,
-    conversion: 65,
+    revenue: 0,
+    profit: 0,
+    events: 0,
+    conversion: 0,
   };
 
   const dataFinanceiro = [
-    { name: 'Jan', receita: 3000, lucro: 1200 },
-    { name: 'Fev', receita: 4000, lucro: 1800 },
-    { name: 'Mar', receita: 3500, lucro: 1500 },
-    { name: 'Abr', receita: 4580, lucro: 2200 },
+    { name: 'Jan', receita: 0, lucro: 0 },
+    { name: 'Fev', receita: 0, lucro: 0 },
+    { name: 'Mar', receita: 0, lucro: 0 },
+    { name: 'Abr', receita: 0, lucro: 0 },
   ];
 
   const dataEventos = [
-    { name: 'Jan', eventos: 8 },
-    { name: 'Fev', eventos: 10 },
-    { name: 'Mar', eventos: 9 },
-    { name: 'Abr', eventos: 12 },
+    { name: 'Jan', eventos: 0 },
+    { name: 'Fev', eventos: 0 },
+    { name: 'Mar', eventos: 0 },
+    { name: 'Abr', eventos: 0 },
   ];
 
   return (
