@@ -189,15 +189,15 @@ export function ServiceModal({ isOpen, onClose, service, onSave, servicosCadastr
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest flex justify-between">
                     <span>Descrição Curta <span className="text-danger">*</span></span>
                     <span className={errors.description ? 'text-danger' : 'text-text-muted'}>
-                      {(formData.description?.length || 0)}/160
+                      {(formData.description?.length || 0)}/500
                     </span>
                   </label>
                   <textarea 
                     value={formData.description || ''}
-                    maxLength={160}
+                    maxLength={500}
                     onChange={e => { setFormData(prev => ({ ...prev, description: e.target.value })); setErrors(p => ({ ...p, description: false })); }}
                     placeholder="Descreva o serviço..."
-                    className={`w-full bg-surface-base border ${errors.description ? 'border-danger focus:ring-danger' : 'border-surface-border-subtle'} rounded-xl p-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-purple resize-none h-24`}
+                    className={`w-full bg-surface-base border ${errors.description ? 'border-danger focus:ring-danger' : 'border-surface-border-subtle'} rounded-xl p-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-purple resize-none h-32`}
                   />
                   <p className="text-[10px] text-text-secondary">Aparece no card do site e no WhatsApp.</p>
                 </div>
