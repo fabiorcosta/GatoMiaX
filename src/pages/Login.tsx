@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { LogIn, Lock, Mail, AlertCircle, UserPlus, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ADICIONE AQUI OS E-MAILS QUE SERÃO ADMINISTRADORES AUTOMÁTICOS
+// ADMINS AUTOMÁTICOS
 const ADMIN_WHITELIST = [
   'fabiorcosta@gmail.com',
   'vc.moretti.vm@gmail.com'
@@ -16,7 +16,7 @@ const ADMIN_WHITELIST = [
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
-  const [nome, setNome] = useState(''); // Novo campo para o Perfil
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,29 +30,28 @@ export default function Login() {
     setSuccess(false);
 
     try {
+      const cleanEmail = email.toLowerCase().trim();
       if (isRegister) {
         if (!nome) throw new Error('Nome é obrigatório');
-
-        const userCredential = await createUserWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
+        
+        const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         const user = userCredential.user;
 
-        // Verifica se está na whitelist
-        const isAdmin = ADMIN_WHITELIST.includes(email.toLowerCase().trim());
+        const isAdmin = ADMIN_WHITELIST.includes(cleanEmail);
 
-        // Criar perfil no Firestore
         await setDoc(doc(db, 'usuarios', user.uid), {
           id: user.uid,
           nome,
-          email: email.toLowerCase().trim(),
+          email: cleanEmail,
           role: isAdmin ? 'admin' : 'viewer',
-          approved: isAdmin, // Auto-aprova se for admin
+          approved: isAdmin,
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp(),
         });
 
         setSuccess(true);
       } else {
-        await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
+        await signInWithEmailAndPassword(auth, cleanEmail, password);
       }
     } catch (err: any) {
       console.error(err);
@@ -60,8 +59,10 @@ export default function Login() {
         setError('Este e-mail já está em uso.');
       } else if (err.code === 'auth/weak-password') {
         setError('A senha deve ter pelo menos 6 caracteres.');
+      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('E-mail ou senha incorretos.');
       } else {
-        setError('E-mail ou senha inválidos. Verifique seu console do Firebase.');
+        setError('Ocorreu um erro. Verifique sua conexão.');
       }
     } finally {
       setLoading(false);
@@ -69,100 +70,113 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-base p-4 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-purple/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-yellow/10 blur-[120px] rounded-full" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-surface-base p-4 sm:p-6 lg:p-8 relative overflow-hidden selection:bg-brand-purple/30">
+      {/* Background Decorativo Estável */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-purple/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-yellow/5 blur-[120px] rounded-full" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-[400px] min-w-[280px] relative z-10"
       >
-        <div className="card-gradient rounded-3xl border border-surface-border glass p-8 shadow-2xl">
-          <div className="flex flex-col items-center mb-8 text-center">
-            <motion.div
+        <div className="card-gradient rounded-[32px] border border-surface-border glass p-6 sm:p-10 shadow-2xl flex flex-col">
+          {/* Header - Logo & Toggle */}
+          <div className="flex flex-col items-center mb-8">
+            <motion.div 
               key={isRegister ? 'reg' : 'log'}
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              className="w-16 h-16 bg-brand-purple/20 rounded-2xl flex items-center justify-center mb-4 border border-brand-purple/30"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-14 h-14 bg-brand-purple/20 rounded-2xl flex items-center justify-center mb-6 border border-brand-purple/30 shadow-inner"
             >
               {isRegister ? (
-                <UserPlus className="w-8 h-8 text-brand-purple" />
+                <UserPlus className="w-7 h-7 text-brand-purple" />
               ) : (
-                <LogIn className="w-8 h-8 text-brand-purple" />
+                <LogIn className="w-7 h-7 text-brand-purple" />
               )}
             </motion.div>
-            <h1 className="text-3xl font-display font-bold text-text-primary tracking-tight">
+            
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary tracking-tight leading-none mb-1 text-center">
               GatoMia<span className="text-brand-yellow">X</span>
             </h1>
-            <div className="flex bg-surface-base border border-surface-border-subtle p-1 rounded-xl mt-6 w-full">
+            <p className="text-[10px] text-text-muted uppercase tracking-[0.2em] font-medium mb-8 text-center">
+              Backoffice Intelligence
+            </p>
+
+            {/* Login/Register Toggle Switch */}
+            <div className="flex bg-surface-base/80 border border-surface-border-subtle p-1 rounded-2xl w-full max-w-[240px]">
               <button
+                type="button"
                 onClick={() => { setIsRegister(false); setError(null); }}
                 className={cn(
-                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
-                  !isRegister ? "bg-brand-purple text-brand-yellow" : "text-text-muted hover:text-text-primary"
+                  "flex-1 py-1 text-[10px] font-black rounded-xl transition-all uppercase tracking-tighter",
+                  !isRegister ? "bg-brand-purple text-brand-yellow shadow-lg" : "text-text-muted hover:text-text-primary"
                 )}
               >
-                LOGIN
+                Acessar
               </button>
               <button
+                type="button"
                 onClick={() => { setIsRegister(true); setError(null); }}
                 className={cn(
-                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
-                  isRegister ? "bg-brand-purple text-brand-yellow" : "text-text-muted hover:text-text-primary"
+                  "flex-1 py-1 text-[10px] font-black rounded-xl transition-all uppercase tracking-tighter",
+                  isRegister ? "bg-brand-purple text-brand-yellow shadow-lg" : "text-text-muted hover:text-text-primary"
                 )}
               >
-                CRIAR CONTA
+                Cadastrar
               </button>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {isRegister && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-1 overflow-hidden"
-              >
-                <label className="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider text-[10px]">
-                  Nome Completo
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Seu nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  icon={<LogIn className="w-4 h-4 opacity-0" />} // Spacer icon
-                  required={isRegister}
-                />
-              </motion.div>
-            )}
+          <form onSubmit={handleSubmit} className="space-y-4 w-full">
+            <AnimatePresence mode="popLayout">
+              {isRegister && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-1.5"
+                >
+                  <label className="text-[10px] font-bold text-text-muted ml-1 uppercase tracking-widest">
+                    Nome Completo
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Como devemos te chamar?"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required={isRegister}
+                    className="h-10"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-muted ml-1 uppercase tracking-wider text-[10px]">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-muted ml-1 uppercase tracking-widest">
                 E-mail
               </label>
               <Input
                 type="email"
-                placeholder="exemplo@gatomia.com"
+                placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail className="w-4 h-4" />}
+                icon={<Mail className="w-4 h-4 opacity-40" />}
                 required
+                className="h-10"
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center px-1">
-                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider text-[10px]">
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
                   Senha
                 </label>
                 {!isRegister && (
-                  <button type="button" className="text-[10px] font-bold text-brand-purple hover:text-brand-purple-light transition-colors">
+                  <button type="button" className="text-[10px] font-black text-brand-purple hover:text-brand-purple-light transition-colors">
                     ESQUECEU?
                   </button>
                 )}
@@ -172,47 +186,54 @@ export default function Login() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock className="w-4 h-4" />}
+                icon={<Lock className="w-4 h-4 opacity-40" />}
                 required
+                className="h-10"
               />
             </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-danger/10 border border-danger/20 p-3 rounded-xl flex items-center gap-3 text-danger text-[11px] font-medium"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {error}
-              </motion.div>
-            )}
+            <div className="pt-2">
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-danger/10 border border-danger/20 p-3 rounded-xl flex items-center gap-3 text-danger text-[11px] font-medium mb-4"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{error}</span>
+                  </motion.div>
+                )}
 
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-success/10 border border-success/20 p-3 rounded-xl flex items-center gap-3 text-success text-[11px] font-medium"
-              >
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                Conta criada! Redirecionando...
-              </motion.div>
-            )}
+                {success && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-success/10 border border-success/20 p-3 rounded-xl flex items-center gap-3 text-success text-[11px] font-medium mb-4"
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>Conta criada com sucesso!</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-sm font-bold mt-4 uppercase tracking-widest"
-              isLoading={loading}
-            >
-              {isRegister ? 'Criar Acesso' : 'Acessar Painel'}
-            </Button>
+              <Button
+                type="submit"
+                className="w-full h-11 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 transition-all hover:shadow-brand-purple/40 active:scale-[0.98]"
+                isLoading={loading}
+              >
+                {isRegister ? 'Criar Acesso' : 'Entrar no Painel'}
+              </Button>
+            </div>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-surface-border-subtle text-center">
-            <p className="text-text-muted text-xs italic">
-              "Painel Administrativo v0.1.0"
+          <footer className="mt-8 pt-6 border-t border-surface-border-subtle text-center">
+            <p className="text-[10px] text-text-muted font-medium italic opacity-60">
+              Versão 0.1.0-A • Gato Mia Recreação
             </p>
-          </div>
+          </footer>
         </div>
       </motion.div>
     </div>
