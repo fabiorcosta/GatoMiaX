@@ -15,9 +15,9 @@ import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { PlusCircle, Search, Edit2, Trash2, Check, AlertCircle } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { PlusCircle, Search, AlertCircle } from 'lucide-react';
 import type { Servico } from '@/types';
+import { ServiceCard } from '@/components/ServiceCard';
 
 export default function Servicos() {
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -94,6 +94,17 @@ export default function Servicos() {
     }
   };
 
+  const handleToggleActive = async (servico: Servico) => {
+    try {
+      await updateDoc(doc(db, 'servicos', servico.id), {
+        ativo: !servico.ativo,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Erro ao mudar status:", error);
+    }
+  };
+
   const filteredServicos = servicos.filter(s => 
     s.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -143,48 +154,13 @@ export default function Servicos() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredServicos.map(serv => (
-                <motion.div 
-                  layout
+                <ServiceCard 
                   key={serv.id} 
-                  className="group bg-surface-raised/40 border border-surface-border-subtle rounded-2xl p-5 hover:border-brand-purple/50 transition-all hover:shadow-lg hover:shadow-brand-purple/5"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="font-display font-bold text-lg text-text-primary group-hover:text-brand-yellow transition-colors">{serv.nome}</h3>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter ${serv.ativo ? 'bg-success/10 text-success border border-success/20' : 'bg-surface-border text-text-muted border border-surface-border-subtle'}`}>
-                      {serv.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Preço Sugerido:</span>
-                      <span className="font-black text-brand-yellow tracking-tight">{formatCurrency(serv.precoSugerido)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Nível Mínimo:</span>
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-base rounded-md border border-surface-border-subtle">
-                        <div className="w-1.5 h-1.5 rounded-full bg-brand-purple" />
-                        <span className="text-[10px] font-bold text-text-primary">NÍVEL {serv.nivelMinimo}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-surface-border-subtle flex justify-between items-center">
-                    <button 
-                      onClick={() => handleDelete(serv.id)}
-                      className="p-2 hover:bg-danger/10 text-text-muted hover:text-danger rounded-lg transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleOpenModal(serv)}
-                      className="px-4 py-2 bg-surface-base hover:bg-surface-hover border border-surface-border-subtle text-text-secondary hover:text-brand-yellow rounded-xl transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      Editar
-                    </button>
-                  </div>
-                </motion.div>
+                  service={serv} 
+                  mode="admin" 
+                  onEdit={handleOpenModal}
+                  onToggleActive={handleToggleActive}
+                />
               ))}
             </div>
           )}
