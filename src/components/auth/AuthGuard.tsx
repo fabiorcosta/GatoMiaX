@@ -8,6 +8,11 @@ import { LogOut, ShieldAlert } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/Button';
 
+const ADMIN_WHITELIST = [
+  'fabiorcosta@gmail.com',
+  'vc.moretti.vm@gmail.com'
+];
+
 export default function AuthGuard() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -18,24 +23,37 @@ export default function AuthGuard() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setAuthenticated(true);
+        
+        // Auto-approve if in whitelist
+        const isAdmin = user.email ? ADMIN_WHITELIST.includes(user.email.toLowerCase()) : false;
+        
         try {
           // Verificar aprovação no Firestore
           const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
           if (userDoc.exists()) {
-            setApproved(userDoc.data().approved === true);
+            const data = userDoc.data();
+            const isApproved = data.approved === true || isAdmin;
+            
+            // Corrige no banco se for admin mas estiver listado como false
+            if (isAdmin && data.approved !== true) {
+              await setDoc(doc(db, 'usuarios', user.uid), { approved: true }, { merge: true });
+            }
+            
+            setApproved(isApproved);
           } else {
             // Se o usuário logou mas não tem registro, criar um pendente
             await setDoc(doc(db, 'usuarios', user.uid), {
               email: user.email,
               displayName: user.displayName,
-              approved: false,
+              approved: isAdmin,
+              role: isAdmin ? 'admin' : 'viewer',
               createdAt: serverTimestamp()
             });
-            setApproved(false);
+            setApproved(isAdmin);
           }
         } catch (err) {
           console.error("AuthGuard whitelist error:", err);
-          setApproved(false);
+          setApproved(isAdmin); // Libera o admin mesmo que o DB falhe momentaneamente
         }
       } else {
         setAuthenticated(false);

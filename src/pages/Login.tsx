@@ -22,12 +22,38 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Digite seu e-mail acima para redefinir a senha.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setResetMessage(null);
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetMessage('Um link de redefinição foi enviado para o seu e-mail.');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found') {
+        setError('Nenhum usuário encontrado com este e-mail.');
+      } else {
+        setError('Erro ao enviar e-mail de redefinição. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setResetMessage(null);
 
     try {
       const cleanEmail = email.toLowerCase().trim();
@@ -179,7 +205,7 @@ export default function Login() {
                   Senha
                 </label>
                 {!isRegister && (
-                  <button type="button" className="text-[10px] font-black text-brand-purple hover:text-brand-purple-light transition-colors">
+                  <button type="button" onClick={handleResetPassword} className="text-[10px] font-black text-brand-purple hover:text-brand-purple-light transition-colors">
                     ESQUECEU?
                   </button>
                 )}
@@ -218,6 +244,18 @@ export default function Login() {
                   >
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>Conta criada com sucesso!</span>
+                  </motion.div>
+                )}
+
+                {resetMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-brand-purple/10 border border-brand-purple/20 p-3 rounded-xl flex items-center gap-3 text-brand-purple text-[11px] font-medium mb-4"
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{resetMessage}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
