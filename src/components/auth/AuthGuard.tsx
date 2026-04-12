@@ -50,7 +50,7 @@ export default function AuthGuard() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-surface-base">
+      <div className="fixed inset-0 grid place-items-center bg-surface-base z-[9999]" style={{ width: '100vw', height: '100vh' }}>
         <div className="text-center">
           <motion.div 
             animate={{ rotate: 360 }}
@@ -69,26 +69,39 @@ export default function AuthGuard() {
 
   if (!approved) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-surface-base p-6">
+      <div 
+        className="fixed inset-0 grid place-items-center bg-surface-base p-6 z-[9999]"
+        style={{ width: '100vw', height: '100vh', boxSizing: 'border-box' }}
+      >
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full card-gradient rounded-3xl p-8 border border-surface-border glass text-center shadow-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="card-gradient rounded-3xl p-8 border border-surface-border glass text-center shadow-2xl flex flex-col items-center"
+          style={{ 
+            width: '420px', 
+            maxWidth: '95vw',
+            minHeight: '200px',
+            boxSizing: 'border-box'
+          }}
         >
-          <div className="w-20 h-20 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-warning/20">
-            <ShieldAlert className="w-10 h-10 text-warning" />
+          <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center mb-6 border border-warning/20">
+            <ShieldAlert className="w-8 h-8 text-warning" />
           </div>
-          <h2 className="text-2xl font-display font-bold text-text-primary mb-2">Acesso Restrito</h2>
-          <p className="text-text-secondary text-sm mb-8">
+          
+          <h2 className="text-2xl font-display font-bold text-text-primary mb-3">Acesso Restrito</h2>
+          
+          <p className="text-text-secondary text-sm mb-8 leading-relaxed">
             Seu acesso ao backoffice do **GatoMiaX** está pendente de aprovação. 
             Entre em contato com o administrador para liberar seu usuário.
           </p>
-          <div className="space-y-3">
-             <div className="bg-surface-base/50 p-4 rounded-2xl border border-surface-border-subtle text-left mb-6">
+
+          <div className="w-full space-y-4">
+             <div className="bg-surface-base/50 p-4 rounded-xl border border-surface-border-subtle text-left overflow-hidden">
                 <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Usuário Logado</p>
-                <p className="text-sm font-bold text-text-primary truncate">{auth.currentUser?.email}</p>
+                <p className="text-xs font-bold text-text-primary truncate">{auth.currentUser?.email}</p>
              </div>
-             <Button variant="outline" className="w-full gap-2 py-6 rounded-2xl" onClick={handleSignOut}>
+             
+             <Button variant="outline" className="w-full h-12 gap-2" onClick={handleSignOut}>
                <LogOut className="w-4 h-4" /> Resetar Sessão
              </Button>
           </div>
