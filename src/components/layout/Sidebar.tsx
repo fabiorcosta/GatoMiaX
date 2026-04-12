@@ -34,23 +34,20 @@ export default function Sidebar() {
   const { config } = useConfig();
 
   useEffect(() => {
-    // Escuta apenas eventos que não estão em colunas de conclusão (sucesso ou perda)
+    // Busca os estágios terminados (sucesso/perda) para não contá-los no badge
     const terminalIds = config.funnel_stages
       .filter((col: any) => col.categoria === 'sucesso' || col.categoria === 'perda')
       .map((col: any) => col.id);
     
+    // Se ainda não carregou config ou não tem estágios, não tenta fazer a query complexa
     if (terminalIds.length === 0) {
-      // Se não houver estágios terminais configurados ainda, conta tudo
-      const q = collection(db, 'eventos');
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        setFunilCount(snapshot.size);
-      });
-      return () => unsubscribe();
+      setFunilCount(0);
+      return;
     }
 
     const q = query(
       collection(db, 'eventos'),
-      where('statusId', 'not-in', terminalIds)
+      where('status', 'not-in', terminalIds)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -164,11 +161,15 @@ export default function Sidebar() {
         <div className="px-4 py-4 border-t border-surface-border-subtle bg-surface-base/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-brand-yellow flex items-center justify-center text-sm font-bold text-brand-purple shadow-lg shadow-brand-yellow/10">
-              V
+              {auth.currentUser?.email ? auth.currentUser.email[0].toUpperCase() : 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-text-primary truncate">Victor Hugo</p>
-              <p className="text-[10px] text-text-muted uppercase tracking-wider">Administrador</p>
+              <p className="text-sm font-bold text-text-primary truncate">
+                {auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Usuário'}
+              </p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider">
+                {auth.currentUser?.email}
+              </p>
             </div>
           </div>
           <button 
