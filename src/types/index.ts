@@ -40,6 +40,7 @@ export interface Evento {
   // Temporal
   data: Timestamp | string;
   horario?: string;
+  duracao?: number;
 
   // Tipo
   tipoEvento: TipoEvento;
@@ -69,7 +70,7 @@ export interface Evento {
 
   // Funil
   status: EventoStatus;
-  statusUpdatedAt: Timestamp | string;
+  statusUpdatedAt: Timestamp | string | any;
 
   // Colônia
   colonia?: ColoniaInfo;
@@ -78,8 +79,8 @@ export interface Evento {
   observacoes?: string;
 
   // Metadata
-  createdAt: Timestamp | string;
-  updatedAt: Timestamp | string;
+  createdAt: Timestamp | string | any;
+  updatedAt: Timestamp | string | any;
   criadoPor: string;
 }
 

@@ -90,8 +90,14 @@ export function LeadCard({ card, mode, onMoveClick, onEditClick, onWhatsAppClick
           </div>
           <div className="flex items-center gap-2 text-xs text-text-secondary">
             <Calendar className="w-3 h-3 text-text-muted shrink-0" />
-            <span>{formatDate(card.eventDate)}</span>
+            <span>{formatDate(card.eventDate)} {card.rawEventoInfo?.horario ? `às ${card.rawEventoInfo.horario}` : ''}</span>
           </div>
+          {card.rawEventoInfo?.duracao && (
+            <div className="flex items-center gap-2 text-[10px] text-text-muted">
+              <span className="bg-surface-border-subtle h-[2px] w-4" />
+              <span>Duração: {card.rawEventoInfo.duracao}h</span>
+            </div>
+          )}
         </div>
 
         {/* Footer (Team & Age indicator) */}
@@ -151,7 +157,7 @@ export function LeadCard({ card, mode, onMoveClick, onEditClick, onWhatsAppClick
       <div className="flex-1 min-w-0">
         <h4 className="font-bold text-text-primary text-sm truncate">{card.clientName}</h4>
         <div className="flex items-center gap-2 mt-1 text-[10px] uppercase font-bold tracking-widest text-text-muted">
-          <span>{formatDate(card.eventDate)}</span>
+          <span>{formatDate(card.eventDate)} {card.rawEventoInfo?.horario ? `• ${card.rawEventoInfo.horario}` : ''}</span>
           <span className="w-1 h-1 rounded-full bg-surface-border-subtle" />
           <span className="text-brand-yellow truncate">{formatCurrency(card.estimatedValue)}</span>
         </div>

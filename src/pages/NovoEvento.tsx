@@ -14,6 +14,9 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
   const [nomeCliente, setNomeCliente] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [dataEvento, setDataEvento] = useState('');
+  const [horario, setHorario] = useState('14:00');
+  const [duracao, setDuracao] = useState(4);
+  const [tipoEvento, setTipoEvento] = useState<'festa' | 'colonia'>('festa');
   const [distanciaKm, setDistanciaKm] = useState(10);
   const [valorCobrado, setValorCobrado] = useState(850);
   
@@ -56,8 +59,17 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
   const margemPercentual = valorCobrado > 0 ? (lucroLiquido / valorCobrado) * 100 : 0;
 
   const handleSalvar = async () => {
-    if (!nomeCliente || !dataEvento || !valorCobrado) {
-      setFeedback({ type: 'error', message: 'Preencha o Nome do Cliente, Data e Valor Combinado.' });
+    if (!nomeCliente || !dataEvento || !valorCobrado || !horario || !duracao) {
+      setFeedback({ type: 'error', message: 'Preencha o Nome, Data, Horário, Duração e Valor.' });
+      return;
+    }
+
+    // Validação de Data Futura
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataEv = new Date(dataEvento + 'T00:00:00');
+    if (dataEv < hoje) {
+      setFeedback({ type: 'error', message: 'A data do evento deve ser no futuro.' });
       return;
     }
     
@@ -122,7 +134,9 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         clienteId: clienteRef.id,
         clienteNome: nomeCliente,
         data: dataEvento,
-        tipoEvento: 'festa', // Padrão
+        horario,
+        duracao,
+        tipoEvento,
         valorTotal: valorCobrado,
         valorSinal: 0,
         sinalPago: false,
@@ -134,7 +148,7 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         distanciaKm,
         equipe: equipePayload,
         servicosContratados: servicosPayload,
-        status: 'orcado',
+        status: 'orcamento_enviado', // Alinhado com DEFAULT_STAGES
         statusUpdatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -150,12 +164,17 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         setNomeCliente('');
         setWhatsapp('');
         setDataEvento('');
+        setHorario('14:00');
+        setDuracao(4);
+        setTipoEvento('festa');
         setDistanciaKm(10);
         setValorCobrado(850);
         setEquipeSelecionada([]);
         setServicosSelecionados([]);
         setFeedback(null);
-      }, 3000);
+        // Opcional: Redirecionar para o Funil
+        if (onNavigate) onNavigate('dashboard'); 
+      }, 2000);
 
     } catch (error) {
       console.error(error);
@@ -220,6 +239,30 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
                 value={dataEvento}
                 onChange={(e) => setDataEvento(e.target.value)}
               />
+              <Input 
+                label="Horário" 
+                type="time"
+                value={horario}
+                onChange={(e) => setHorario(e.target.value)}
+              />
+              <Input 
+                label="Duração (horas)" 
+                type="number"
+                min="1"
+                value={duracao}
+                onChange={(e) => setDuracao(Number(e.target.value))}
+              />
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Tipo de Evento</label>
+                <select 
+                  className="w-full h-10 px-4 bg-surface-base border border-surface-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-purple"
+                  value={tipoEvento}
+                  onChange={(e) => setTipoEvento(e.target.value as 'festa' | 'colonia')}
+                >
+                  <option value="festa">Festa</option>
+                  <option value="colonia">Colônia de Férias</option>
+                </select>
+              </div>
             </div>
           </div>
 
