@@ -252,7 +252,7 @@ export default function Login() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="bg-brand-purple/10 border border-brand-purple/20 p-3 rounded-xl flex items-center gap-3 text-brand-purple text-[11px] font-medium mb-4"
+                    className="bg-brand-yellow/10 border border-brand-yellow/20 p-3 rounded-xl flex items-center gap-3 text-brand-yellow text-[11px] font-medium mb-4"
                   >
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>{resetMessage}</span>
