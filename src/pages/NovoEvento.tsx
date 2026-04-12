@@ -10,7 +10,7 @@ import { auth, db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
 import type { Recreador, Servico, Evento } from '@/types';
 
-export default function NovoEvento() {
+export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) => void }) {
   const [nomeCliente, setNomeCliente] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [dataEvento, setDataEvento] = useState('');
@@ -59,6 +59,27 @@ export default function NovoEvento() {
     if (!nomeCliente || !dataEvento || !valorCobrado) {
       setFeedback({ type: 'error', message: 'Preencha o Nome do Cliente, Data e Valor Combinado.' });
       return;
+    }
+    
+    const maxRequiredLevel = servicosSelecionados.reduce((max, servId) => {
+      const serv = availableServicos.find(s => s.id === servId);
+      return serv?.nivelMinimo ? Math.max(max, serv.nivelMinimo) : max;
+    }, 0);
+
+    const highestSelectedRecLevel = equipeSelecionada.reduce((max, recId) => {
+      const rec = availableRecreadores.find(r => r.id === recId);
+      return rec?.nivel ? Math.max(max, rec.nivel) : max;
+    }, 0);
+
+    if (servicosSelecionados.length > 0 && maxRequiredLevel > 0) {
+      if (equipeSelecionada.length === 0) {
+        setFeedback({ type: 'error', message: `Serviços selecionados exigem equipe. Escolha pelo menos um recreador de Nível ${maxRequiredLevel}.` });
+        return;
+      }
+      if (maxRequiredLevel > highestSelectedRecLevel) {
+        setFeedback({ type: 'error', message: `Nível insuficiente da equipe! Este evento requer pelo menos um recreador de Nível ${maxRequiredLevel}.` });
+        return;
+      }
     }
 
     setLoading(true);
@@ -221,7 +242,17 @@ export default function NovoEvento() {
           </div>
 
           <div className="card-gradient rounded-xl p-6 border border-surface-border glass">
-            <h3 className="font-display font-semibold mb-4 text-brand-yellow">3. Escala da Equipe</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-display font-semibold text-brand-yellow">3. Escala da Equipe</h3>
+              {onNavigate && (
+                <button 
+                  onClick={() => onNavigate('equipe')} 
+                  className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
+                >
+                  + Adicionar Recreador
+                </button>
+              )}
+            </div>
             <div className="space-y-3">
               {availableRecreadores.length === 0 ? (
                 <p className="text-text-muted text-sm italic">Nenhum recreador ativo cadastrado no sistema.</p>
@@ -249,7 +280,17 @@ export default function NovoEvento() {
           </div>
           
           <div className="card-gradient rounded-xl p-6 border border-surface-border glass">
-            <h3 className="font-display font-semibold mb-4 text-brand-yellow">4. Serviços Incluídos</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-display font-semibold text-brand-yellow">4. Serviços Incluídos</h3>
+              {onNavigate && (
+                <button 
+                  onClick={() => onNavigate('servicos')} 
+                  className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
+                >
+                  + Adicionar Serviço
+                </button>
+              )}
+            </div>
             <div className="space-y-3">
               {availableServicos.length === 0 ? (
                 <p className="text-text-muted text-sm italic">Nenhum serviço ativo cadastrado no sistema.</p>

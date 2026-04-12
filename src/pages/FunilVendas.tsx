@@ -204,7 +204,7 @@ export default function FunilVendas({ onNavigate }: FunilVendasProps) {
              
              {isDesktop && (
                <Button className="gap-2 shrink-0" onClick={() => onNavigate && onNavigate('novo-evento')}>
-                 <Plus className="w-4 h-4" /> Novo Lead
+                 <Plus className="w-4 h-4" /> Novo Orçamento
                </Button>
              )}
           </div>
