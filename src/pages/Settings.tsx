@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings as SettingsIcon, Filter, Clock, DollarSign, Users, PlusCircle, Trash2, Save, GripVertical } from 'lucide-react';
 import { useConfig } from '@/lib/settings';
@@ -75,9 +76,17 @@ function SortableStage({ stage, onEdit, onDelete }: { stage: FunnelStage, onEdit
 
 
 export default function Settings() {
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
   const { config, loading, save } = useConfig();
-  const [activeTab, setActiveTab] = useState<'funnel' | 'automations' | 'financial' | 'team'>('funnel');
   
+  // Tab ID safe
+  const activeTab = useMemo(() => {
+    const validTabs = ['funnel', 'automations', 'financial', 'team'];
+    if (tab && validTabs.includes(tab)) return tab as 'funnel' | 'automations' | 'financial' | 'team';
+    return 'funnel';
+  }, [tab]);
+
   // Local state for tabs to allow editing before saving
   const [localStages, setLocalStages] = useState<FunnelStage[]>([]);
   const [localAuto, setLocalAuto] = useState<any>({});
@@ -101,6 +110,17 @@ export default function Settings() {
     }
   }, [config, loading]);
 
+  // Redirect if tab is invalid
+  useEffect(() => {
+    const validTabs = ['funnel', 'automations', 'financial', 'team'];
+    if (tab && !validTabs.includes(tab)) {
+      navigate('/configuracoes/funnel', { replace: true });
+    }
+    if (!tab) {
+      navigate('/configuracoes/funnel', { replace: true });
+    }
+  }, [tab, navigate]);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -115,7 +135,6 @@ export default function Settings() {
         const oldIndex = items.findIndex(i => i.id === active.id);
         const newIndex = items.findIndex(i => i.id === over.id);
         const moved = arrayMove(items, oldIndex, newIndex);
-        // Update order props
         return moved.map((item, idx) => ({ ...item, order: idx }));
       });
     }
@@ -156,10 +175,8 @@ export default function Settings() {
     if (!editingStage.label) return;
     
     if (editingStage.id) {
-      // Edit
       setLocalStages(prev => prev.map(s => s.id === editingStage.id ? { ...s, ...editingStage } as FunnelStage : s));
     } else {
-      // Add
       const slug = editingStage.label.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_' + Date.now();
       const newS: FunnelStage = {
         id: slug,
@@ -199,7 +216,7 @@ export default function Settings() {
           {tabs.map(t => (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => navigate(`/configuracoes/${t.id}`)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
                 activeTab === t.id 
                 ? 'bg-brand-purple text-text-primary shadow-glow-purple' 

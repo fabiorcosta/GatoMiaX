@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { StatCard } from '@/components/ui/StatCard';
-import { Save, Car, Users, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Save, Car, Users, TrendingUp, AlertCircle, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { CUSTO_KM } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { Recreador, Servico, Evento } from '@/types';
 
-export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+export default function NovoEvento() {
+  const { eventId } = useParams<{ eventId?: string }>();
+  const navigate = useNavigate();
+  
   const [nomeCliente, setNomeCliente] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [dataEvento, setDataEvento] = useState('');
@@ -27,7 +31,37 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
   const [availableServicos, setAvailableServicos] = useState<Servico[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(!!eventId);
   const [feedback, setFeedback] = useState<{type: 'error' | 'success', message: string} | null>(null);
+
+  // Fetch Event data if eventId is present
+  useEffect(() => {
+    if (eventId) {
+      const fetchEvent = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, 'eventos', eventId));
+          if (docSnap.exists()) {
+            const data = docSnap.data() as Evento;
+            setNomeCliente(data.clienteNome || '');
+            setWhatsapp((data as any).clienteTelefone || '');
+            setDataEvento(data.data || '');
+            setHorario(data.horario || '14:00');
+            setDuracao(data.duracao || 4);
+            setTipoEvento(data.tipoEvento || 'festa');
+            setDistanciaKm(data.distanciaKm || 0);
+            setValorCobrado(data.valorTotal || 0);
+            setEquipeSelecionada(data.equipe?.map(e => e.id) || []);
+            setServicosSelecionados(data.servicosContratados?.map(s => s.id) || []);
+          }
+        } catch (err) {
+          console.error("Error fetching event:", err);
+        } finally {
+          setPageLoading(false);
+        }
+      };
+      fetchEvent();
+    }
+  }, [eventId]);
 
   // Fetch Ativos
   useEffect(() => {
@@ -58,13 +92,21 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
   const lucroLiquido = valorCobrado - custoTotal;
   const margemPercentual = valorCobrado > 0 ? (lucroLiquido / valorCobrado) * 100 : 0;
 
+  const valorSugeridoTotal = servicosSelecionados.reduce((acc, id) => {
+    const serv = availableServicos.find(s => s.id === id);
+    return acc + (serv?.precoSugerido || 0);
+  }, 0);
+
+  const descontoAplicado = valorSugeridoTotal > valorCobrado;
+  const valorDesconto = valorSugeridoTotal - valorCobrado;
+  const percentualDesconto = valorSugeridoTotal > 0 ? (valorDesconto / valorSugeridoTotal) * 100 : 0;
+
   const handleSalvar = async () => {
     if (!nomeCliente || !dataEvento || !valorCobrado || !horario || !duracao) {
       setFeedback({ type: 'error', message: 'Preencha o Nome, Data, Horário, Duração e Valor.' });
       return;
     }
 
-    // Validação de Data Futura
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const dataEv = new Date(dataEvento + 'T00:00:00');
@@ -98,17 +140,6 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
     setFeedback(null);
 
     try {
-      // 1. Criar novo cliente avulso
-      const clienteRef = await addDoc(collection(db, 'clientes'), {
-        nome: nomeCliente,
-        whatsapp: whatsapp || '',
-        totalEventos: 1,
-        consentimento: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      // 2. Preparar payload da Equipe
       const equipePayload = equipeSelecionada.map(id => {
         const rec = availableRecreadores.find(r => r.id === id);
         return {
@@ -119,7 +150,6 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         };
       });
 
-      // 3. Preparar payload de Serviços
       const servicosPayload = servicosSelecionados.map(id => {
         const serv = availableServicos.find(s => s.id === id);
         return {
@@ -129,18 +159,14 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         };
       });
 
-      // 4. Salvar Evento (Status "orcado" inicializa o Funil de Vendas)
-      const novoEvento: Omit<Evento, 'id'> = {
-        clienteId: clienteRef.id,
+      const payload: any = {
         clienteNome: nomeCliente,
+        clienteTelefone: whatsapp,
         data: dataEvento,
         horario,
         duracao,
         tipoEvento,
         valorTotal: valorCobrado,
-        valorSinal: 0,
-        sinalPago: false,
-        restantePago: false,
         custoEquipe,
         custoDeslocamento,
         lucroLiquido,
@@ -148,33 +174,39 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
         distanciaKm,
         equipe: equipePayload,
         servicosContratados: servicosPayload,
-        status: 'orcamento_enviado', // Alinhado com DEFAULT_STAGES
-        statusUpdatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        criadoPor: auth.currentUser?.uid || 'admin'
       };
 
-      await addDoc(collection(db, 'eventos'), novoEvento);
+      if (eventId) {
+        await updateDoc(doc(db, 'eventos', eventId), payload);
+      } else {
+        // Criar novo cliente avulso
+        const clienteRef = await addDoc(collection(db, 'clientes'), {
+          nome: nomeCliente,
+          whatsapp: whatsapp || '',
+          totalEventos: 1,
+          consentimento: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
 
-      setFeedback({ type: 'success', message: 'Evento salvo e enviado ao Funil de Vendas com sucesso!' });
+        payload.clienteId = clienteRef.id;
+        payload.status = 'orcamento_enviado';
+        payload.statusUpdatedAt = serverTimestamp();
+        payload.createdAt = serverTimestamp();
+        payload.criadoPor = auth.currentUser?.uid || 'admin';
+        payload.valorSinal = 0;
+        payload.sinalPago = false;
+        payload.restantePago = false;
+
+        await addDoc(collection(db, 'eventos'), payload);
+      }
+
+      setFeedback({ type: 'success', message: `Evento ${eventId ? 'atualizado' : 'salvo'} com sucesso!` });
       
-      // Limpa o formulário
       setTimeout(() => {
-        setNomeCliente('');
-        setWhatsapp('');
-        setDataEvento('');
-        setHorario('14:00');
-        setDuracao(4);
-        setTipoEvento('festa');
-        setDistanciaKm(10);
-        setValorCobrado(850);
-        setEquipeSelecionada([]);
-        setServicosSelecionados([]);
-        setFeedback(null);
-        // Opcional: Redirecionar para o Funil
-        if (onNavigate) onNavigate('dashboard'); 
-      }, 2000);
+        navigate('/funil');
+      }, 1500);
 
     } catch (error) {
       console.error(error);
@@ -184,6 +216,10 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
     }
   };
 
+  if (pageLoading) {
+    return <div className="p-8">Carregando dados do evento...</div>;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -191,13 +227,20 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
       className="space-y-6 max-w-5xl mx-auto"
     >
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary">Novo Evento</h1>
-          <p className="text-text-secondary mt-1">Calculadora de margem em tempo real e cadastro.</p>
+        <div className="flex items-center gap-4">
+          <Link to="/funil" className="p-2 hover:bg-surface-raised rounded-xl transition-colors">
+            <ChevronLeft className="w-6 h-6 text-text-muted" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-text-primary">
+              {eventId ? 'Editar Evento' : 'Novo Evento'}
+            </h1>
+            <p className="text-text-secondary mt-1">Calculadora de margem em tempo real e cadastro.</p>
+          </div>
         </div>
         <Button className="gap-2" onClick={handleSalvar} isLoading={loading}>
           <Save className="w-4 h-4" />
-          Salvar Evento
+          {eventId ? 'Atualizar Evento' : 'Salvar Evento'}
         </Button>
       </div>
 
@@ -282,19 +325,30 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
                 onChange={(e) => setDistanciaKm(Number(e.target.value))}
               />
             </div>
+
+            {descontoAplicado && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mt-4 flex items-center gap-2 px-3 py-2 bg-brand-purple/10 border border-brand-purple/20 rounded-lg"
+              >
+                <div className="w-2 h-2 rounded-full bg-brand-purple animate-pulse" />
+                <span className="text-[11px] font-bold text-brand-purple uppercase tracking-wider">
+                  Desconto Comercial Aplicado: {formatCurrency(valorDesconto)} ({percentualDesconto.toFixed(1)}%)
+                </span>
+              </motion.div>
+            )}
           </div>
 
           <div className="card-gradient rounded-xl p-6 border border-surface-border glass">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-display font-semibold text-brand-yellow">3. Escala da Equipe</h3>
-              {onNavigate && (
-                <button 
-                  onClick={() => onNavigate('equipe')} 
-                  className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
-                >
-                  + Adicionar Recreador
-                </button>
-              )}
+              <Link 
+                to="/equipe" 
+                className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
+              >
+                + Gerenciar Equipe
+              </Link>
             </div>
             <div className="space-y-3">
               {availableRecreadores.length === 0 ? (
@@ -325,14 +379,12 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
           <div className="card-gradient rounded-xl p-6 border border-surface-border glass">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-display font-semibold text-brand-yellow">4. Serviços Incluídos</h3>
-              {onNavigate && (
-                <button 
-                  onClick={() => onNavigate('servicos')} 
-                  className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
-                >
-                  + Adicionar Serviço
-                </button>
-              )}
+              <Link 
+                to="/servicos" 
+                className="text-xs font-bold uppercase tracking-widest text-brand-purple hover:text-brand-purple-light transition-colors"
+              >
+                + Gerenciar Serviços
+              </Link>
             </div>
             <div className="space-y-3">
               {availableServicos.length === 0 ? (
@@ -402,11 +454,19 @@ export default function NovoEvento({ onNavigate }: { onNavigate?: (tab: string) 
               {margemPercentual < 30 && (
                 <p className="text-[10px] text-danger mt-2 font-bold uppercase">Atenção: Margem muito baixa!</p>
               )}
+              {descontoAplicado && (
+                <div className="mt-3 pt-3 border-t border-brand-yellow/20">
+                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-brand-yellow/70">
+                    <span>Preço sem desconto</span>
+                    <span>{formatCurrency(valorSugeridoTotal)}</span>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             <Button className="w-full h-12 text-sm font-black uppercase tracking-widest mt-4 shadow-glow-purple" onClick={handleSalvar} isLoading={loading}>
               <Save className="w-4 h-4 mr-2" />
-              Salvar Evento
+              {eventId ? 'Atualizar Evento' : 'Salvar Evento'}
             </Button>
           </div>
         </div>

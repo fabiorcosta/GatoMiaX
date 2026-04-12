@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Filter,
@@ -14,26 +15,20 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import type { TabKey } from '@/types';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useConfig } from '@/lib/settings';
 
-interface SidebarProps {
-  activeTab: TabKey;
-  onTabChange: (tab: TabKey) => void;
-}
-
-const NAV_ITEMS: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'funil', label: 'Funil de Vendas', icon: Filter },
-  { key: 'novo-evento', label: 'Novo Evento', icon: PlusCircle },
-  { key: 'servicos', label: 'Serviços', icon: Briefcase },
-  { key: 'equipe', label: 'Equipe', icon: Users },
-  { key: 'settings', label: 'Configurações', icon: SettingsIcon },
+const NAV_ITEMS = [
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/funil', label: 'Funil de Vendas', icon: Filter },
+  { path: '/eventos/novo', label: 'Novo Evento', icon: PlusCircle },
+  { path: '/servicos', label: 'Serviços', icon: Briefcase },
+  { path: '/equipe', label: 'Equipe', icon: Users },
+  { path: '/configuracoes', label: 'Configurações', icon: SettingsIcon },
 ];
 
-export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [funilCount, setFunilCount] = useState(0);
   const { config } = useConfig();
@@ -44,7 +39,14 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       .filter((col: any) => col.categoria === 'sucesso' || col.categoria === 'perda')
       .map((col: any) => col.id);
     
-    if (terminalIds.length === 0) return;
+    if (terminalIds.length === 0) {
+      // Se não houver estágios terminais configurados ainda, conta tudo
+      const q = collection(db, 'eventos');
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setFunilCount(snapshot.size);
+      });
+      return () => unsubscribe();
+    }
 
     const q = query(
       collection(db, 'eventos'),
@@ -100,7 +102,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo — roxo + amarelo como no site */}
+        {/* Logo */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-surface-border-subtle">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 mascot-badge flex items-center justify-center text-lg">
@@ -128,36 +130,37 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              id={`nav-${key}`}
-              onClick={() => {
-                onTabChange(key);
-                setMobileOpen(false);
-              }}
-              className={cn(
+          {NAV_ITEMS.map(({ path, label, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) => cn(
                 "flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer group",
-                activeTab === key
+                isActive
                   ? "bg-brand-purple text-brand-yellow glow-purple font-semibold"
                   : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
               )}
             >
-              <Icon className={cn(
-                "w-4.5 h-4.5 mr-3 shrink-0 transition-colors",
-                activeTab === key ? "text-brand-yellow" : "text-text-muted group-hover:text-text-secondary"
-              )} />
-              {label}
-              {key === 'funil' && funilCount > 0 && (
-                <span className="ml-auto text-[10px] bg-brand-yellow text-text-inverse px-2 py-0.5 rounded-full font-black min-w-[20px] text-center shadow-sm">
-                  {funilCount}
-                </span>
+              {({ isActive }) => (
+                <>
+                  <Icon className={cn(
+                    "w-4.5 h-4.5 mr-3 shrink-0 transition-colors",
+                    isActive ? "text-brand-yellow" : "text-text-muted group-hover:text-text-secondary"
+                  )} />
+                  {label}
+                  {path === '/funil' && funilCount > 0 && (
+                    <span className="ml-auto text-[10px] bg-brand-yellow text-text-inverse px-2 py-0.5 rounded-full font-black min-w-[20px] text-center shadow-sm">
+                      {funilCount}
+                    </span>
+                  )}
+                </>
               )}
-            </button>
+            </NavLink>
           ))}
         </nav>
 
-        {/* Footer — perfil do Victor */}
+        {/* Footer */}
         <div className="px-4 py-4 border-t border-surface-border-subtle bg-surface-base/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-brand-yellow flex items-center justify-center text-sm font-bold text-brand-purple shadow-lg shadow-brand-yellow/10">
