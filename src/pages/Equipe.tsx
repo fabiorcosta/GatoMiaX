@@ -33,6 +33,7 @@ export default function Equipe() {
     nivel: 1,
     ativo: true,
     conducao: false,
+    salario: SALARIOS_POR_NIVEL[1],
   });
 
   // Fetch Team
@@ -54,10 +55,11 @@ export default function Equipe() {
         nivel: rec.nivel,
         ativo: rec.ativo,
         conducao: rec.conducao || false,
+        salario: rec.salario || SALARIOS_POR_NIVEL[rec.nivel as keyof typeof SALARIOS_POR_NIVEL],
       });
     } else {
       setEditingRecreador(null);
-      setFormData({ nome: '', nivel: 1, ativo: true, conducao: false });
+      setFormData({ nome: '', nivel: 1, ativo: true, conducao: false, salario: SALARIOS_POR_NIVEL[1] });
     }
     setIsModalOpen(true);
   };
@@ -65,19 +67,16 @@ export default function Equipe() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Salário dinâmico baseado no nível
-      const salarioBase = SALARIOS_POR_NIVEL[formData.nivel as keyof typeof SALARIOS_POR_NIVEL] || 0;
-      
       if (editingRecreador) {
         await updateDoc(doc(db, 'recreadores', editingRecreador.id), {
           ...formData,
-          salario: salarioBase,
+          salario: Number(formData.salario),
           updatedAt: serverTimestamp(),
         });
       } else {
         await addDoc(collection(db, 'recreadores'), {
           ...formData,
-          salario: salarioBase,
+          salario: Number(formData.salario),
           totalEventos: 0,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -233,7 +232,14 @@ export default function Equipe() {
                 title="Nível do Recreador"
                 className="w-full h-10 pl-4 pr-10 py-2 bg-surface-base border border-surface-border-subtle rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-purple text-text-primary appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M6%209L12%2015L18%209%22%20stroke%3D%22%23F2F2F2%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-size-[1.2em_1.2em] bg-position-[right_0.8rem_center] bg-no-repeat"
                 value={formData.nivel}
-                onChange={e => setFormData({ ...formData, nivel: Number(e.target.value) })}
+                onChange={e => {
+                   const novoNivel = Number(e.target.value);
+                   setFormData({ 
+                     ...formData, 
+                     nivel: novoNivel,
+                     salario: SALARIOS_POR_NIVEL[novoNivel as keyof typeof SALARIOS_POR_NIVEL] || formData.salario
+                   });
+                }}
               >
                 <option value={1}>Nível 1 (Básico)</option>
                 <option value={2}>Nível 2 (Intermediário)</option>
@@ -244,10 +250,17 @@ export default function Equipe() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center justify-between">
                 Salário Base
-                <span className="text-brand-yellow/50">Auto</span>
+                <span className="text-brand-purple/50">Editável</span>
               </label>
-              <div className="h-10 px-4 py-2 bg-surface-base/50 border border-surface-border-subtle rounded-xl text-sm font-black text-brand-yellow flex items-center cursor-not-allowed opacity-80">
-                {formatCurrency(SALARIOS_POR_NIVEL[formData.nivel as keyof typeof SALARIOS_POR_NIVEL] || 0)}
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-bold">R$</span>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full h-10 pl-9 pr-4 py-2 bg-surface-base border border-surface-border-subtle rounded-xl text-sm font-black text-brand-yellow focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all"
+                  value={formData.salario}
+                  onChange={e => setFormData({ ...formData, salario: Number(e.target.value) })}
+                />
               </div>
             </div>
           </div>
