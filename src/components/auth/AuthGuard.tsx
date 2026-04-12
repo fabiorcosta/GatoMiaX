@@ -20,12 +20,12 @@ export default function AuthGuard() {
         setAuthenticated(true);
         try {
           // Verificar aprovação no Firestore
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
           if (userDoc.exists()) {
             setApproved(userDoc.data().approved === true);
           } else {
             // Se o usuário logou mas não tem registro, criar um pendente
-            await setDoc(doc(db, 'users', user.uid), {
+            await setDoc(doc(db, 'usuarios', user.uid), {
               email: user.email,
               displayName: user.displayName,
               approved: false,
