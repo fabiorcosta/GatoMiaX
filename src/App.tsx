@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Clock, ShieldAlert, LogOut } from 'lucide-react';
 import type { TabKey, Usuario } from '@/types';
 
-const PAGES: Record<TabKey, React.ComponentType> = {
+const PAGES: Record<TabKey, React.ComponentType<any>> = {
   dashboard: Dashboard,
   funil: FunilVendas,
   'novo-evento': NovoEvento,
@@ -127,7 +127,7 @@ export default function App() {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <MainLayout>
         <AnimatePresence mode="wait">
-          <ActivePage key={activeTab} />
+          <ActivePage key={activeTab} onNavigate={setActiveTab} />
         </AnimatePresence>
       </MainLayout>
     </div>

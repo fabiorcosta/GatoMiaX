@@ -17,7 +17,11 @@ import { StageTabBar } from '@/components/funnel/StageTabBar';
 import { LeadCard } from '@/components/funnel/LeadCard';
 import { MoveStageSheet } from '@/components/funnel/MoveStageSheet';
 
-export default function FunilVendas() {
+interface FunilVendasProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function FunilVendas({ onNavigate }: FunilVendasProps) {
   const { config, loading: configLoading } = useConfig();
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,7 +203,7 @@ export default function FunilVendas() {
              </div>
              
              {isDesktop && (
-               <Button className="gap-2 shrink-0">
+               <Button className="gap-2 shrink-0" onClick={() => onNavigate && onNavigate('novo-evento')}>
                  <Plus className="w-4 h-4" /> Novo Lead
                </Button>
              )}
@@ -244,7 +248,10 @@ export default function FunilVendas() {
 
         {/* MOBILE FAB */}
         {!isDesktop && (
-          <button className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-brand-purple text-brand-yellow flex items-center justify-center shadow-glow-purple border border-brand-yellow/20 active:scale-95 transition-transform">
+          <button 
+            onClick={() => onNavigate && onNavigate('novo-evento')}
+            className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-brand-purple text-brand-yellow flex items-center justify-center shadow-glow-purple border border-brand-yellow/20 active:scale-95 transition-transform"
+          >
              <Plus className="w-6 h-6" />
           </button>
         )}
