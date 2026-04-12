@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -15,6 +16,7 @@ const ADMIN_WHITELIST = [
 ];
 
 export default function Login() {
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -76,8 +78,11 @@ export default function Login() {
         });
 
         setSuccess(true);
+        // Redirect after registration
+        setTimeout(() => navigate('/'), 800);
       } else {
         await signInWithEmailAndPassword(auth, cleanEmail, password);
+        navigate('/');
       }
     } catch (err: any) {
       console.error(err);
